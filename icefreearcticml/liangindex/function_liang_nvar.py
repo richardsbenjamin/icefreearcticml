@@ -150,9 +150,9 @@ def compute_liang_nvar(x,dt,n_iter):
                 boot_tau[it,j,i] = compute_liang_index_norm(boot_detC,boot_Delta[i,:],boot_dC[:,i],boot_T[it,:,i],boot_T[it,i,i],boot_g[i],boot_C[i,i],boot_T[it,j,i])
 
     # Compute error in T, tau and R (standard deviation of boostraped values)
-    error_T = np.nanstd(boot_T,axis=0)
-    error_tau = np.nanstd(boot_tau,axis=0)
-    error_R = np.nanstd(boot_R,axis=0)
+    # error_T = np.nanstd(boot_T,axis=0)
+    # error_tau = np.nanstd(boot_tau,axis=0)
+    # error_R = np.nanstd(boot_R,axis=0)
     
     # Return result of function
-    return T,tau,R,error_T,error_tau,error_R
+    return T, tau, R, boot_T, boot_tau, boot_R

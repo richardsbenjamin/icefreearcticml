@@ -17,6 +17,14 @@ MODELS = [
     "ACCESS-ESM1-5",
     "Observations",
 ]
+MULTI_LIANG_RES_NAMES = [
+    "T",
+    "tau",
+    "R",
+    "error_T",
+    "error_tau",
+    "error_R",
+]
 SIG_LVL = 0.05
 VARIABLES = [
     "ssie",     # September sea ice extent
