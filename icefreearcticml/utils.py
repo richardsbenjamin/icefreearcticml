@@ -118,6 +118,10 @@ def filter_by_years(
         start_year: str,
         end_year: str,
     ) -> Series | DataFrame:
+    if isinstance(start_year, int):
+        start_year = f'{start_year}-01-01'
+    if isinstance(end_year, int):
+        end_year = f'{end_year}-01-01'
     return model_data.loc[start_year:end_year].copy()
 
 def get_shape_df(model_data: dict) -> DataFrame:
