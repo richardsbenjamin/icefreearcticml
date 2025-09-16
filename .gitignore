@@ -3,5 +3,5 @@
 data/*
 !data/.gitkeep
 __pycache__
-lightening_logs/*
-lightening_logs/
+lightning_logs/*
+lightning_logs/
