@@ -150,7 +150,6 @@ def plot_variable(ax: Axes, var: str, all_var_data: dict, ylabel: str, title_i: 
                 var_data.index, calculate_ensemble_min(var_data),
                 calculate_ensemble_max(var_data), color=MODEL_COLOURS[model_name], alpha=0.1,
             )
-    ax.tick_params(labelsize=20)
     ax.grid(linestyle='--')
     ax.set_ylabel(ylabel, fontsize=26)
     ax.set_title(chr(ord('a')+title_i),loc='left',fontsize=30,fontweight='bold')
