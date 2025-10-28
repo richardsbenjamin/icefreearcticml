@@ -5,3 +5,8 @@ data/*
 __pycache__
 lightning_logs/*
 lightning_logs/
+Images/*
+Images/
+Other/*
+Other/
+outputs/*
