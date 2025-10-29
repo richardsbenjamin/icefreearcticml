@@ -10,17 +10,17 @@ from sklearn.linear_model import LinearRegression
 from sklearn.metrics import mean_squared_error, r2_score
 from scipy.stats import combine_pvalues
 
-from icefreearcticml.constants import (
+from icefreearcticml.icefreearcticml.constants import (
     MODELS,
     MODEL_COLOURS,
     MULTI_LIANG_RES_NAMES,
     VAR_YLABELS_SHORT,
 )
-from icefreearcticml.utils import (
+from icefreearcticml.icefreearcticml.utils import (
     calculate_first_icefree_year,
     filter_by_years,
 )
-from icefreearcticml.liangindex.function_liang_nvar import compute_liang_nvar
+from icefreearcticml.icefreearcticml.liangindex.function_liang_nvar import compute_liang_nvar
 
 # Module-level handle to notebook-loaded data to minimize notebook refactors
 MODEL_DATA: Dict | None = None

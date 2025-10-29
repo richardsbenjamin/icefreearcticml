@@ -7,16 +7,16 @@ import numpy as np
 import xarray as xr
 from pandas import DataFrame, concat
 
-from icefreearcticml.constants import (
+from icefreearcticml.icefreearcticml.constants import (
     MODELS,
     VARIABLES as VAR_NAMES,
 )
-from icefreearcticml.utils import (
+from icefreearcticml.icefreearcticml.utils import (
     calculate_bias,
     calculate_first_icefree_year,
     read_model_data_all,
 )
-from icefreearcticml.pipeline_helpers import add_all
+from icefreearcticml.icefreearcticml.pipeline_helpers import add_all
 
 
 MODEL_NAMES: List[str] = MODELS[:-1]  # exclude 'Observations'

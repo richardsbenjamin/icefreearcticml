@@ -25,14 +25,14 @@ if [ -f ${OUTPUT_FILE} ]; then
 fi
 
 # Optional environment overrides
-VARS_ARG=${VARS:-"tas,wsiv,oht_atl,oht_pac"}
-BIAS_START_ARG=${BIAS_START:-"1980-01-01"}
-BIAS_END_ARG=${BIAS_END:-"2014-01-01"}
+VARS_ARG="tas,wsiv,oht_atl,oht_pac"
+BIAS_START_ARG="1980-01-01"
+BIAS_END_ARG="2014-01-01"
 
 RUN_CMD="python scripts/precomp.py \
-    --vars \"${VARS_ARG}\" \
-    --bias-start \"${BIAS_START_ARG}\" \
-    --bias-end \"${BIAS_END_ARG}\" \
+    --vars ${VARS_ARG} \
+    --bias-start ${BIAS_START_ARG} \
+    --bias-end ${BIAS_END_ARG} \
     --save-dir ${OUTPUT_DIR}"
 
 # If output file is given, redirect output

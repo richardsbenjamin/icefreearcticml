@@ -5,12 +5,12 @@ import os
 import joblib
 from typing import List
 
-from icefreearcticml.tft_helpers import (
+from icefreearcticml.icefreearcticml.tft_helpers import (
     TrainConfig,
     run_model_from_config,
 )
-from icefreearcticml.utils import read_model_data_all
-from icefreearcticml.pipeline_helpers import add_all
+from icefreearcticml.icefreearcticml.utils import read_model_data_all
+from icefreearcticml.icefreearcticml.pipeline_helpers import add_all
 
 
 def parse_args() -> argparse.Namespace:

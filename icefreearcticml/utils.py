@@ -6,8 +6,8 @@ from numpy import datetime64, load, mean, nan
 from pandas import DataFrame, Series
 from scipy.stats import combine_pvalues, pearsonr, spearmanr, kendalltau
 
-from icefreearcticml._typing import TYPE_CHECKING
-from icefreearcticml.constants import (
+from icefreearcticml.icefreearcticml._typing import TYPE_CHECKING
+from icefreearcticml.icefreearcticml.constants import (
     MODEL_COLOURS,
     MODELS,
     MODEL_START_YEAR,
@@ -19,10 +19,10 @@ from icefreearcticml.constants import (
     VARIABLES,
     VAR_OBS_START_YEARS,
 )
-from icefreearcticml.liangindex import compute_liang_nvar
+from icefreearcticml.icefreearcticml.liangindex import compute_liang_nvar
 
 if TYPE_CHECKING:
-    from icefreearcticml._typing import Axes, ndarray
+    from icefreearcticml.icefreearcticml._typing import Axes, ndarray
 
 
 def calculate_bias(

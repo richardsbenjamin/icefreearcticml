@@ -7,8 +7,8 @@ from pandas import DataFrame, DatetimeIndex
 from sklearn.metrics import mean_squared_error, r2_score
 from scipy.stats import pearsonr
 
-from icefreearcticml.utils import filter_by_years, calculate_first_icefree_year
-from icefreearcticml.pipeline_helpers import (
+from icefreearcticml.icefreearcticml.utils import filter_by_years, calculate_first_icefree_year
+from icefreearcticml.icefreearcticml.pipeline_helpers import (
     get_datetime_index,
     get_train_test_ensembles,
 )

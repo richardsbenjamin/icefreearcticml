@@ -19,20 +19,20 @@ if [ -f ${OUTPUT_FILE} ]; then
 fi
 
 # Optional environment overrides
-MODEL_NAME_ARG=${MODEL_NAME:-"all"}
-TRAIN_SPLIT_ARG=${TRAIN_SPLIT:-"0.8"}
-MAX_ENCODER_ARG=${MAX_ENCODER_LENGTH:-"10"}
-MAX_PRED_ARG=${MAX_PREDICTION_LENGTH:-"1"}
-Y_VAR_ARG=${Y_VAR:-"ssie"}
-X_VARS_ARG=${X_VARS:-"tas,wsiv,oht_atl,oht_pac"}
+MODEL_NAME_ARG="all"
+TRAIN_SPLIT_ARG="0.8"
+MAX_ENCODER_ARG="10"
+MAX_PRED_ARG="1"
+Y_VAR_ARG="ssie"
+X_VARS_ARG="tas,wsiv,oht_atl,oht_pac"
 
 RUN_CMD="python scripts/baseline_train.py \
-    --model-name \"${MODEL_NAME_ARG}\" \
+    --model-name ${MODEL_NAME_ARG} \
     --train-split ${TRAIN_SPLIT_ARG} \
     --max-encoder-length ${MAX_ENCODER_ARG} \
     --max-prediction-length ${MAX_PRED_ARG} \
-    --y-var \"${Y_VAR_ARG}\" \
-    --x-vars \"${X_VARS_ARG}\" \
+    --y-var ${Y_VAR_ARG} \
+    --x-vars ${X_VARS_ARG} \
     --save-dir ${OUTPUT_DIR}"
 
 # If output file is given, redirect output
