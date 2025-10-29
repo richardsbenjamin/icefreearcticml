@@ -8,7 +8,7 @@ import matplotlib.pyplot as plt
 from pandas import DataFrame
 from sklearn.metrics import mean_squared_error
 
-from icefreearcticml.constants import (
+from icefreearcticml.icefreearcticml.constants import (
     VARIABLES as VAR_NAMES,
     MODELS as _MODELS,
     MODEL_COLOURS,

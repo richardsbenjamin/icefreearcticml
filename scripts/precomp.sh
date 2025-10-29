@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Local paths
-HOME_DIR="/home/benjamin"
+HOME_DIR="/content"
 MODULE_DIR="${HOME_DIR}/icefreearcticml"
 OUTPUT_DIR="${MODULE_DIR}/outputs"
 
