@@ -1,166 +1,191 @@
 from __future__ import annotations
-
+from abc import ABC, abstractmethod
 import argparse
 import os
 from dataclasses import dataclass
-from typing import Dict, Tuple
+from typing import Dict, List, Tuple
 
 import joblib
 import numpy as np
+import pandas as pd
 from pandas import DataFrame
-from sklearn.linear_model import LinearRegression
-from sklearn.neural_network import MLPRegressor
-from sklearn.preprocessing import StandardScaler
+from scipy import stats
 
-from icefreearcticml.utils import (
+from icefreearcticml.icefreearcticml.utils import (
     read_model_data_all,
     filter_by_years,
 )
-from icefreearcticml.pipeline_helpers import add_all
+from icefreearcticml.icefreearcticml.pipeline_helpers import add_all
 
 
-@dataclass
-class ECConfig:
-    predictor_var: str = "tas"
-    target_var: str = "ssie"
-    hist_start: int = 1980
-    hist_end: int = 2014
-    fut_start: int = 2030
-    fut_end: int = 2060
-    time_varying: bool = False
-    method: str = "linear"     # "linear" | "mlp"
-    target_stat: str = "mean"  # "mean" | "trend"
-    model_name: str = "all"
+
+class BaseConstraintModel(ABC):
+    """Abstract base class for emergent constraint models"""
+    
+    @abstractmethod
+    def fit(self, X, Y):
+        """Train the model on model data"""
+        pass
+    
+    @abstractmethod
+    def get_y_c(self, X_o):
+        """Predict constrained Y_c given observed X_o"""
+        pass
+    
+    @abstractmethod
+    def get_ci(self, *args: tuple):
+        """Calculate 90% confidence interval"""
+        pass
 
 
-def parse_args() -> argparse.Namespace:
-    p = argparse.ArgumentParser(description="Run emergent constraints (linear or MLP; static or time-varying)")
-    p.add_argument("--predictor-var", default="tas")
-    p.add_argument("--target-var", default="ssie")
-    p.add_argument("--hist-start", type=int, default=1980)
-    p.add_argument("--hist-end", type=int, default=2014)
-    p.add_argument("--fut-start", type=int, default=2030)
-    p.add_argument("--fut-end", type=int, default=2060)
-    p.add_argument("--time-varying", action="store_true", help="Use time-varying EC (sequence features)")
-    p.add_argument("--method", choices=["linear", "mlp"], default="linear")
-    p.add_argument("--target-stat", choices=["mean", "trend"], default="mean")
-    p.add_argument("--model-name", default="all", help="Which model set in model_data to use")
-    p.add_argument("--save-dir", default="outputs")
-    return p.parse_args()
+class EMLinearModel(BaseConstraintModel):
+    """Constraint model based on linear regression"""
+
+    def __init__(self, Xbar: np.ndarray, Ybar: np.ndarray) -> None:
+        self.Xbar = Xbar
+        self.Ybar = Ybar
+        self.model_res = None
+
+    def fit(self, X: np.ndarray, Y: np.ndarray) -> None:
+        X_centred = X - self.Xbar
+        Y_centred = Y - self.Ybar
+        self.model_res = stats.linregress(X_centred, Y_centred)  # This gives the same b
+
+    def get_y_c(self, Xo: np.ndarray) -> float:
+        self.Yc = self.Ybar + self.model_res.slope * (Xo - self.Xbar)
+        return self.Yc
+
+    def get_ci(self, Y: np.ndarray, n: int, r: float) -> Tuple[float, float]:
+        """Calculate 90% confidence interval"""
+        sigma = ((Y - self.Ybar) ** 2).sum() / (n - 2) * (1 - r**2)
+        ci_low = self.Yc - 1.65 * sigma
+        ci_high = self.Yc + 1.65 * sigma
+        return ci_low, ci_high
+
+EM_MODEL_TYPES = {
+    "linear": EMLinearModel,
+}
 
 
-def get_member_matrix(df: DataFrame, start_year: int, end_year: int) -> np.ndarray:
-    sub = filter_by_years(df, start_year, end_year)
-    # rows: years, cols: members
-    return sub.to_numpy()
-
-
-def get_predictor_features(df: DataFrame, cfg: ECConfig) -> Tuple[np.ndarray, StandardScaler | None]:
-    mat = get_member_matrix(df, cfg.hist_start, cfg.hist_end)
-    if not cfg.time_varying:
-        # feature: mean over historical period per member
-        feats = mat.mean(axis=0).reshape(-1, 1)
-        return feats, None
-    # time-varying: use entire historical sequence (year dimension)
-    # shape (members, time)
-    feats = mat.T
-    scaler = StandardScaler()
-    feats = scaler.fit_transform(feats)
-    return feats, scaler
-
-
-def linear_trend(y: np.ndarray) -> float:
-    x = np.arange(len(y)).reshape(-1, 1)
-    reg = LinearRegression().fit(x, y)
-    return float(reg.coef_[0])
-
-
-def get_target_values(df: DataFrame, cfg: ECConfig) -> np.ndarray:
-    mat = get_member_matrix(df, cfg.fut_start, cfg.fut_end)
-    if cfg.target_stat == "mean":
-        return mat.mean(axis=0)
-    elif cfg.target_stat == "trend":
-        # compute per-member linear trend over future window
-        return np.apply_along_axis(linear_trend, 0, mat)
-    raise ValueError("Unknown target_stat")
-
-
-def fit_model(X: np.ndarray, y: np.ndarray, method: str):
-    if method == "linear":
-        model = LinearRegression()
+def get_em_model(model_type: str, *args: tuple) -> BaseConstraintModel:
+    if model_type in EM_MODEL_TYPES:
+        return EM_MODEL_TYPES[model_type](*args)
     else:
-        model = MLPRegressor(hidden_layer_sizes=(64, 32), activation="relu", random_state=42, max_iter=2000)
-    model.fit(X, y)
-    return model
+        raise ValueError(f"Unknown model type: {model_type}")
 
+def parse_args(args_list: list | None = None) -> argparse.Namespace:
+    p = argparse.ArgumentParser(description="Time-varying emergent constraint with optimal historical window selection")
+    p.add_argument("--var", default="ssie", help="Variable to use for both predictor (history) and target (future)")
+    p.add_argument("--obs-start", type=int, default=1979)
+    p.add_argument("--obs-end", type=int, default=2023)
+    p.add_argument("--calib-start", type=int, default=2024)
+    p.add_argument("--calib-end", type=int, default=2099)
+    p.add_argument("--window", type=int, default=5, help="Projection sliding window length (years)")
+    p.add_argument("--model-name", default="all", help="Name of CMPI6 model to use")
+    p.add_argument("--model-type", default="linear", choices=EM_MODEL_TYPES.keys(), help="Type of constraint model")
+    p.add_argument("--save-dir", default="outputs")
+    if args_list is None:
+        return p.parse_args()
+    else:
+        return p.parse_args(args_list)
 
-def constrain_projection(model, X_obs: np.ndarray) -> float:
-    return float(model.predict(X_obs.reshape(1, -1))[0])
+def all_subperiods_np(start:int, end:int, min_len:int=5):
+    years = np.arange(start, end+1)
+    starts, ends = np.triu_indices(len(years), k=1)
+    periods = list(zip(years[starts], years[ends]))
+    return [(int(s), int(e)) for (s, e) in periods if (e - s + 1) >= min_len]
 
+def mean_over_window(df: DataFrame, start_year: int, end_year: int) -> np.ndarray:
+    sub = filter_by_years(df, start_year, end_year)
+    return sub.to_numpy().mean(axis=0)  # per-member mean
 
-def build_observed_feature(obs_series: DataFrame, cfg: ECConfig, scaler: StandardScaler | None) -> np.ndarray:
-    obs_hist = filter_by_years(obs_series, cfg.hist_start, cfg.hist_end).to_numpy().reshape(-1)
-    if not cfg.time_varying:
-        return np.array([obs_hist.mean()])
-    vec = obs_hist.reshape(1, -1)
-    if scaler is not None:
-        vec = scaler.transform(vec)
-    return vec.reshape(-1)
+def pick_optimal_hist_window(
+    hist_df: DataFrame,
+    fut_df: DataFrame,
+    obs_start: int,
+    obs_end: int,
+    proj_start: int,
+    proj_end: int,
+) -> Tuple[Tuple[int, int], float, float]:
+    # target vector across members for this projection window
+    Y = mean_over_window(fut_df, proj_start, proj_end)
+
+    best_r = -np.inf
+    best_win = (obs_start, obs_end)
+
+    periods = all_subperiods_np(obs_start, obs_end, min_len=5)
+
+    for (hs, he) in periods:
+        X = mean_over_window(hist_df, hs, he)
+        # correlation across members
+        r = float(np.corrcoef(X, Y)[0, 1])
+        if np.isnan(r):
+            continue
+        if r > best_r:
+            best_r = r
+            best_win = (hs, he)
+
+    return best_win, best_r
+
+def run_time_varying_ec(model_data: Dict, args: argparse.Namespace) -> pd.DataFrame:
+    hist_df: DataFrame = model_data[args.hist_var][args.model_name]
+    fut_df: DataFrame = model_data[args.fut_var][args.model_name]
+    obs_series: DataFrame = model_data[args.var]["Observations"]
+    rows = []
+    # slide projection windows
+    for ps in range(args.calib_start, args.calib_end - args.window + 2):
+        pe = ps + args.window - 1
+
+        # choose optimal historical window by inter-model correlation
+        (hs, he), r = pick_optimal_hist_window(
+            hist_df=hist_df,
+            fut_df=fut_df,
+            obs_start=args.obs_start,
+            obs_end=args.obs_end,
+            proj_start=ps,
+            proj_end=pe,
+        )
+
+        # compute needed statistics
+        n = fut_df.shape[-1]
+        Y = mean_over_window(fut_df, ps, pe)
+        X = mean_over_window(hist_df, hs, he)
+        Ybar = float(Y.mean())
+        Xbar = float(X.mean())
+
+        model = get_em_model(args.model_type, Xbar, Ybar)
+        model.fit(X, Y)
+        Xo = float(mean_over_window(obs_series, hs, he))
+        Yc = model.get_y_c(Xo)
+
+        ci_low, ci_high = model.get_ci(Y, n, r)
+        rows.append({
+            "proj_start": ps,
+            "proj_end": pe,
+            "hist_start": hs,
+            "hist_end": he,
+            "r": r,
+            "raw_mean": Ybar,
+            "Yc": Yc,
+            "ci_low": ci_low,
+            "ci_high": ci_high,
+        })
+        return pd.DataFrame(rows)
 
 
 def main() -> None:
     args = parse_args()
     os.makedirs(args.save_dir, exist_ok=True)
-    cfg = ECConfig(
-        predictor_var=args.predictor_var,
-        target_var=args.target_var,
-        hist_start=args.hist_start,
-        hist_end=args.hist_end,
-        fut_start=args.fut_start,
-        fut_end=args.fut_end,
-        time_varying=args.time_varying,
-        method=args.method,
-        target_stat=args.target_stat,
-        model_name=args.model_name,
-    )
 
-    # Load data
     model_data: Dict = read_model_data_all()
     add_all(model_data)
 
-    # Prepare predictor features (members x features)
-    pred_df: DataFrame = model_data[cfg.predictor_var][cfg.model_name]
-    X, scaler = get_predictor_features(pred_df, cfg)
+    df = run_time_varying_ec(model_data, args)
 
-    # Prepare target values (members,)
-    targ_df: DataFrame = model_data[cfg.target_var][cfg.model_name]
-    y = get_target_values(targ_df, cfg)
-
-    # Fit model
-    model = fit_model(X, y, cfg.method)
-    r2 = float(model.score(X, y))
-
-    # Observed constraint
-    obs_series: DataFrame = model_data[cfg.predictor_var]["Observations"]
-    x_obs = build_observed_feature(obs_series, cfg, scaler)
-    constrained = constrain_projection(model, x_obs)
-
-    # Unconstrained mean (raw multi-member)
-    raw_mean = float(y.mean())
-    delta = constrained - raw_mean
-
-    # Save results
-    out = {
-        "config": cfg.__dict__,
-        "r2": r2,
-        "raw_mean": raw_mean,
-        "constrained": constrained,
-        "delta": delta,
-        "n_members": int(X.shape[0]),
-    }
-    out_path = os.path.join(args.save_dir, "emergent_constraints.joblib")
-    joblib.dump(out, out_path)
-    print(f"Saved EC results -> {out_path}")
+    # save both csv and joblib
+    jb_path = os.path.join(args.save_dir, f"emergent_constraints_{args.hist_var}_{args.fut_var}_{args.model_type}.joblib")
+    joblib.dump({"config": args, "results": df}, jb_path)
+    print(f"Saved:\n  {jb_path}")
 
 
 if __name__ == "__main__":

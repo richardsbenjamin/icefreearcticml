@@ -18,35 +18,30 @@ if [ -f ${OUTPUT_FILE} ]; then
     rm ${OUTPUT_FILE}
 fi
 
-# Environment overrides with defaults
-PREDICTOR_VAR_ARG="tas"
-TARGET_VAR_ARG="ssie"
-HIST_START_ARG="1980"
-HIST_END_ARG="2014"
-FUT_START_ARG="2030"
-FUT_END_ARG="2060"
-METHOD_ARG="linear"          # linear | mlp
-TARGET_STAT_ARG="mean"       # mean | trend
+############################################
+# Environment overrides with defaults (TVEC)
+FUT_VAR_ARG="ssie"
+HIST_VAR_ARG="ssie"
+OBS_START_ARG="1979"
+OBS_END_ARG="2023"
+CALIB_START_ARG="2024"
+CALIB_END_ARG="2099"
+WINDOW_ARG="5"
 MODEL_NAME_ARG="all"
-TIME_VARYING_FLAG=""
-
-# TIME_VARYING can be set to 1/true/TRUE to enable the flag
-if [[ "${TIME_VARYING}" == "1" || "${TIME_VARYING}" == "true" || "${TIME_VARYING}" == "TRUE" ]]; then
-  TIME_VARYING_FLAG="--time-varying"
-fi
+MODEL_TYPE_ARG="linear"
 
 RUN_CMD="python scripts/emergent_constraints.py \
-  --predictor-var ${PREDICTOR_VAR_ARG} \
-  --target-var ${TARGET_VAR_ARG} \
-  --hist-start ${HIST_START_ARG} \
-  --hist-end ${HIST_END_ARG} \
-  --fut-start ${FUT_START_ARG} \
-  --fut-end ${FUT_END_ARG} \
-  ${TIME_VARYING_FLAG} \
-  --method \"${METHOD_ARG}\" \
-  --target-stat ${TARGET_STAT_ARG} \
+  --hist-var ${HIST_VAR_ARG} \
+  --fut-var ${FUT_VAR_ARG} \
+  --obs-start ${OBS_START_ARG} \
+  --obs-end ${OBS_END_ARG} \
+  --calib-start ${CALIB_START_ARG} \
+  --calib-end ${CALIB_END_ARG} \
+  --window ${WINDOW_ARG} \
   --model-name ${MODEL_NAME_ARG} \
+  --model-type ${MODEL_TYPE_ARG} \
   --save-dir ${OUTPUT_DIR}"
+
 
 # If output file is given, redirect output
 if [[ -n "${OUTPUT_FILE}" ]]; then
