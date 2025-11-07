@@ -12,8 +12,8 @@ from cmethods.core import apply_ufunc as apply_correction
 
 from icefreearcticml.constants import VARIABLES as VAR_NAMES, MODELS
 from icefreearcticml.utils import read_model_data_all
-from icefreearcticml.pipeline_helpers import add_all
-from icefreearcticml.bias_correction_helpers import (
+from icefreearcticml.pipeline_utils import add_all
+from icefreearcticml.bias_correction_utils import (
     DEFAULT_BIAS_METHODS,
     DEFAULT_MODEL_NAMES,
     compute_bias_corrections,

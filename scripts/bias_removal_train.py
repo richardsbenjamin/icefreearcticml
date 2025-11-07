@@ -11,15 +11,10 @@ import xarray as xr
 from sklearn.cluster import KMeans
 from sklearn.metrics import silhouette_score
 
-from icefreearcticml.tft_helpers import TrainConfig, run_model_from_config
-from icefreearcticml.tft_helpers import get_members_by_percentile
+from icefreearcticml.tft_utils import TrainConfig, run_model_from_config, get_members_by_percentile
 from icefreearcticml.utils import read_model_data_all
-from icefreearcticml.pipeline_helpers import add_all
+from icefreearcticml.pipeline_utils import add_all
 
-
-# ----------------------
-# CLI
-# ----------------------
 
 METHOD_CHOICES = [
     "abs_large_remove",
@@ -48,14 +43,8 @@ def parse_args() -> argparse.Namespace:
     p.add_argument("--save-dir", default="outputs", help="Directory to save joblib outputs")
     return p.parse_args()
 
-
-# ----------------------
-# Core helpers
-# ----------------------
-
 def load_bias_ds(path: str) -> xr.Dataset:
     return xr.load_dataset(path)
-
 
 def build_train_config(args: argparse.Namespace) -> TrainConfig:
     x_vars: List[str] = [v for v in args.x_vars.split(",") if v]
@@ -68,7 +57,6 @@ def build_train_config(args: argparse.Namespace) -> TrainConfig:
         max_prediction_length=args.max_prediction_length,
     )
 
-
 def run_with_member_filter(
     base_config: TrainConfig,
     model_data: Dict,
@@ -77,7 +65,6 @@ def run_with_member_filter(
     cfg = deepcopy(base_config)
     cfg.set_members_for_model(list(members))
     return run_model_from_config(cfg, model_data)
-
 
 def run_percentile_experiment(
     bias_ds: xr.Dataset,
@@ -100,7 +87,6 @@ def run_percentile_experiment(
         results[bias_var] = outputs
     return results
 
-
 def run_half_split(
     bias_ds: xr.Dataset,
     base_config: TrainConfig,
@@ -117,7 +103,6 @@ def run_half_split(
             outputs[ft] = run_with_member_filter(base_config, model_data, members)
         results[bias_var] = outputs
     return results
-
 
 def run_cluster_experiment(
     bias_ds: xr.Dataset,
@@ -149,10 +134,8 @@ def run_cluster_experiment(
         results[bias_var] = outputs
     return results
 
-
 def get_save_name(method: str) -> str:
     return f"{method}_outputs.joblib"
-
 
 def main() -> None:
     args = parse_args()

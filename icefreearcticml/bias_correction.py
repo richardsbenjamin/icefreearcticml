@@ -15,10 +15,6 @@ from icefreearcticml.icefreearcticml.constants import (
 )
 
 
-# ----------------------
-# Defaults (override via function args if desired)
-# ----------------------
-
 DEFAULT_BIAS_METHODS: Dict[str, dict] = {
     "linear_scaling": {"group": "time.month", "kind": "+"},
     "variance_scaling": {"group": "time.month", "kind": "+"},
@@ -26,14 +22,9 @@ DEFAULT_BIAS_METHODS: Dict[str, dict] = {
 }
 
 DEFAULT_BIAS_VARS: List[str] = ["wsiv", "tas", "oht_atl", "oht_pac"]
-
 # Exclude 'Observations'
 DEFAULT_MODEL_NAMES: List[str] = _MODELS[:-1]
 
-
-# ----------------------
-# Core helpers
-# ----------------------
 
 def to_da_from_df(df: DataFrame, name: str) -> xr.DataArray:
     return xr.DataArray(
@@ -42,7 +33,6 @@ def to_da_from_df(df: DataFrame, name: str) -> xr.DataArray:
         dims=["ensemble", "time"],
         name=name,
     )
-
 
 def get_bias_corrected_members(
     model_df: DataFrame,
@@ -53,11 +43,6 @@ def get_bias_corrected_members(
     apply_correction: Callable[..., xr.DataArray],
     method_kwargs: dict,
 ) -> DataFrame:
-    """Apply a correction method per ensemble member and return a DataFrame aligned to model_df.
-
-    apply_correction must be a callable like:
-        apply_correction(method: str, obs: xr.DataArray, simh: xr.DataArray, simp: xr.DataArray, **kwargs) -> xr.DataArray
-    """
     corrected_cols: List[np.ndarray] = []
     for i in model_df.columns:
         out_da = apply_correction(
@@ -82,10 +67,6 @@ def compute_bias_corrections(
     model_names: List[str] | None,
     apply_correction: Callable[..., xr.DataArray],
 ) -> Dict[str, Dict[str, Dict[str, DataFrame]]]:
-    """Compute bias-corrected series for each (method, variable, model).
-
-    Returns a nested dict: bias_corrections[method][var][model_name] -> DataFrame
-    """
     if bias_methods is None:
         bias_methods = DEFAULT_BIAS_METHODS
     if var_names is None:
@@ -121,18 +102,12 @@ def compute_bias_corrections(
 
     return bias_corrections
 
-
 def score_bias_corrections(
     bias_corrections: Dict[str, Dict[str, Dict[str, DataFrame]]],
     model_data: dict,
     bias_vars: List[str] | None,
     model_names: List[str] | None,
 ) -> Tuple[Dict[str, Dict[str, Dict[str, float]]], DataFrame]:
-    """Compute MSE scores vs observations per (var, method, model) and return summary DataFrame.
-
-    Returns (scores_dict, mse_df)
-    where scores_dict[var][method][model_or_all] -> mse
-    """
     if bias_vars is None:
         bias_vars = DEFAULT_BIAS_VARS
     if model_names is None:
@@ -182,7 +157,6 @@ def plot_bias_correction_example(
     nrows: int = 5,
     figsize: Tuple[int, int] = (24, 32),
 ):
-    """Plot raw vs corrected vs observations for a variable across several models."""
     if model_names is None:
         model_names = list(DEFAULT_MODEL_NAMES)
 

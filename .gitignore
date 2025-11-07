@@ -10,3 +10,11 @@ Images/
 Other/*
 Other/
 outputs/*
+GFDL/*
+GFDL/
+MPI/
+MPI/*
+checkpoints/*
+checkpoints/
+*.pkl
+*.ipynb

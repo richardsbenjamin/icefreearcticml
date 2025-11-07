@@ -25,7 +25,7 @@ def parse_args() -> argparse.Namespace:
         default="tas,wsiv,oht_atl,oht_pac",
         help="Comma-separated input variables",
     )
-    p.add_argument("--save-dir", default=True, help="Optional directory to save outputs (joblib)")
+    p.add_argument("--save-dir", help="Directory to save outputs (joblib)")
     return p.parse_args()
 
 
@@ -50,16 +50,12 @@ def main() -> None:
     # Train and get outputs
     output = run_model_from_config(train_config, model_data)
 
-    # Optionally save outputs
-    if args.save_dir:
-        os.makedirs(args.save_dir, exist_ok=True)
-        out_path = os.path.join(args.save_dir, "baseline_output.joblib")
-        joblib.dump(output, out_path)
-        print(f"Saved baseline output -> {out_path}")
-    else:
-        # Print brief summary
-        print("Baseline train completed.")
-        print("Config:", train_config.__dict__)
+    os.makedirs(args.save_dir, exist_ok=True)
+    out_path = os.path.join(args.save_dir, "baseline_output.joblib")
+    joblib.dump(output, out_path)
+    print(f"Saved baseline output -> {out_path}")
+    print("Baseline train completed.")
+    print("Config:", train_config.__dict__)
 
 
 if __name__ == "__main__":

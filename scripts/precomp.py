@@ -92,22 +92,14 @@ def compute_bias_ds(
     )
     return bias_ds
 
-
 def parse_args() -> argparse.Namespace:
     p = argparse.ArgumentParser(description="Precompute bias and ice-free-year datasets")
     p.add_argument("--bias-start", default=DEFAULT_BIAS_START, help="Bias baseline start date (YYYY-MM-DD)")
     p.add_argument("--bias-end", default=DEFAULT_BIAS_END, help="Bias baseline end date (YYYY-MM-DD)")
     p.add_argument("--vars", default=",".join(VAR_NAMES), help="Comma-separated variable names to include")
-    p.add_argument("--save-dir", default=None, help="Optional directory to save outputs as NetCDF")
+    p.add_argument("--save-dir", help="Directory to save outputs as NetCDF")
     return p.parse_args()
-
-
-def maybe_save(ds: xr.Dataset, path: str | None) -> None:
-    if path is None:
-        return
-    ds.to_netcdf(path)
-
-
+    
 def main() -> None:
     args = parse_args()
     variables = [v for v in args.vars.split(",") if v]
@@ -120,17 +112,11 @@ def main() -> None:
     ice_free_year_ds = compute_ice_free_year_ds(model_data)
     bias_ds = compute_bias_ds(model_data, variables, args.bias_start, args.bias_end)
 
-    # optional save
-    if args.save_dir:
-        ice_path = f"{args.save_dir.rstrip('/')}/ice_free_year_ds.nc"
-        bias_path = f"{args.save_dir.rstrip('/')}/bias_ds.nc"
-        maybe_save(ice_free_year_ds, ice_path)
-        maybe_save(bias_ds, bias_path)
-        print(f"Saved: {ice_path}\nSaved: {bias_path}")
-    else:
-        # print brief summaries
-        print("ice_free_year_ds:", ice_free_year_ds)
-        print("bias_ds:", bias_ds)
+    ice_path = f"{args.save_dir.rstrip('/')}/ice_free_year_ds.nc"
+    bias_path = f"{args.save_dir.rstrip('/')}/bias_ds.nc"
+    ice_free_year_ds.to_netcdf(ice_path)
+    bias_ds.to_netcdf(bias_path)
+    print(f"Saved: {ice_path}\nSaved: {bias_path}")
 
 
 if __name__ == "__main__":
