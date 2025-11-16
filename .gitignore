@@ -17,4 +17,3 @@ MPI/*
 checkpoints/*
 checkpoints/
 *.pkl
-*.ipynb
