@@ -1,14 +1,16 @@
 from __future__ import annotations
 
+import random
+
 import numpy as np
 from datetime import datetime
 from numpy import mean, nan
-from pandas import DataFrame, DatetimeIndex, Series, Timestamp, to_datetime
+from pandas import DataFrame, DatetimeIndex, Index, Series, Timestamp, to_datetime
 from scipy.stats import pearsonr, spearmanr, kendalltau
 from sklearn.linear_model import LinearRegression
 
-from icefreearcticml._typing import TYPE_CHECKING
-from icefreearcticml.constants import (
+from icefreearcticml.icefreearcticml._typing import TYPE_CHECKING
+from icefreearcticml.icefreearcticml.constants import (
     MODEL_COLOURS,
     MODELS,
     SIG_LVL,
@@ -81,7 +83,7 @@ def extend_and_fill_series(
 
     s = s[(s.index >= start_year) & (s.index <= end_year)]
 
-    full_years = pd.Index(range(start_year, end_year + 1))
+    full_years = Index(range(start_year, end_year + 1))
     s = s.reindex(full_years)
 
     known = s.dropna()
@@ -116,6 +118,15 @@ def get_datetime_index(start_year: int, end_year: int) -> DatetimeIndex:
 def get_melt(var_data: DataFrame, var: str) -> DataFrame:
     return var_data.reset_index(names="time").melt(id_vars=["time"], var_name="member", value_name=var)
 
+def get_train_test_ensembles(n: int, train_split: float) -> tuple[list]:
+    n_train = int(n * train_split)
+    n_test = n - n_train
+
+    train_ensembles = select_ensembles(n, n_train)
+    test_ensembles = select_remaining(n, train_ensembles)
+
+    return train_ensembles, test_ensembles
+
 def get_shape_df(model_data: dict) -> DataFrame:
     df_in = []
     for var in VARIABLES:
@@ -131,7 +142,9 @@ def get_year_list(start_year: int, end_year: int) -> list[datetime]:
 
 def plot_variable(ax: Axes, var: str, all_var_data: dict, ylabel: str, title_i: int) -> None:
     for i, (model_name, var_data) in enumerate(all_var_data.items()):
-        if model_name == "Observations":
+        if model_name == "all":
+            continue
+        elif model_name == "Observations":
             ax.plot(var_data.index, var_data,'k--', linewidth=4, label=model_name)
         else:
             ax.plot(
@@ -149,6 +162,12 @@ def plot_variable(ax: Axes, var: str, all_var_data: dict, ylabel: str, title_i: 
     ax.legend(**VAR_LEGEND_ARGS[var])
     ax.axis(xmin=np.datetime64('1968-01-01'), xmax=np.datetime64('2102-01-01'), **VAR_YLIMITS[var])
     return ax
+
+def select_ensembles(n: int, x: int) -> list[int]:
+    return random.sample(range(n), x)
+
+def select_remaining(n: int, selected_ensembles: list[int]) -> list[int]:
+    return [i for i in range(n) if i not in selected_ensembles]
 
 def subtract_ensemble_mean(model_data: DataFrame) -> DataFrame:
     return model_data.subtract(model_data.mean(axis=1), axis=0)

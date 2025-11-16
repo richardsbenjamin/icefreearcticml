@@ -19,18 +19,15 @@ if [ -f ${OUTPUT_FILE} ]; then
 fi
 
 UNIVAR_METHODS="random_forest,linear,gradient_boosting,neural_network"
-MULTIVAR_METHODS="random_forest,linear,gradient_boosting,neural_network,chained_rf"
+MULTIVAR_METHODS="random_forest,linear,neural_network,chained_rf"
 
-    
-# Optional environment overrides
-MODE_ARG="multivariate"
+MODE_ARG="multivariate" # univariate or multivariate
 VARS_ARG="ssie,tas,wsiv,oht_atl,oht_pac"
 MODELS_ARG="EC-Earth3,CESM2,MPI-ESM1-2-LR,CanESM5,ACCESS-ESM1-5,all"
-METHOD_ARG=${UNIVAR_METHODS}
+METHOD_ARG=${MULTIVAR_METHODS}
 PARAMS_ARG="{}"
 TRAIN_SPLIT_ARG=0.8
 VAL_SPLIT_ARG=0.1
-OUT_ARG="${OUTPUT_DIR}/bias_correction_ml_results.pkl"
 
 RUN_CMD="python scripts/bias_correction_ml.py \
     --mode ${MODE_ARG} \
@@ -40,7 +37,7 @@ RUN_CMD="python scripts/bias_correction_ml.py \
     --train-split ${TRAIN_SPLIT_ARG} \
     --val-split ${VAL_SPLIT_ARG} \
     --params ${PARAMS_ARG} \
-    --out ${OUT_ARG}"
+    --out ${OUTPUT_DIR}"
 
 # If output file is given, redirect output
 if [[ -n "${OUTPUT_FILE}" ]]; then

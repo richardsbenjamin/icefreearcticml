@@ -21,13 +21,12 @@ fi
 ############################################
 # Environment overrides with defaults (TVEC)
 FUT_VAR_ARG="ssie"
-HIST_VAR_ARG="ssie"
-OBS_START_ARG="1979"
-OBS_END_ARG="2023"
+HIST_VAR_ARG="ssie,tas,wsiv,oht_atl,oht_pac" #"ssie,tas,wsiv"
+OBS_START_ARG="1979" 
+OBS_END_ARG="2018" # 2023 for ssie, tas, wsiv as HIST_VAR_ARG; 2018 for oht_atl, oht_pac
 CALIB_START_ARG="2024"
 CALIB_END_ARG="2099"
 WINDOW_ARG="5"
-MODEL_NAME_ARG="all"
 MODEL_TYPE_ARG="linear"
 
 RUN_CMD="python scripts/emergent_constraints.py \
@@ -38,7 +37,6 @@ RUN_CMD="python scripts/emergent_constraints.py \
   --calib-start ${CALIB_START_ARG} \
   --calib-end ${CALIB_END_ARG} \
   --window ${WINDOW_ARG} \
-  --model-name ${MODEL_NAME_ARG} \
   --model-type ${MODEL_TYPE_ARG} \
   --save-dir ${OUTPUT_DIR}"
 

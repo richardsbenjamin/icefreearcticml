@@ -22,10 +22,15 @@ fi
 MODE_ARG="multivariate"             # univariate | multivariate
 VARS_ARG="ssie,tas,wsiv,oht_atl,oht_pac"
 MODELS_ARG="EC-Earth3,CESM2,MPI-ESM1-2-LR,CanESM5,ACCESS-ESM1-5,all"
-TRAIN_RATIO_ARG=0.8
-VAL_RATIO_ARG=0.1
-EPOCHS_ARG=5000
-CONFIG_ARG="{}"                    # JSON string for TT config
+TRAIN_RATIO_ARG="0.8"
+VAL_RATIO_ARG="0.1"
+MIN_CONTEXT="2"
+MAX_CONTEXT="43"
+BATCH_SIZE="32"
+EPOCHS="5000"
+ACCUM_STEPS="500" # Accumulation steps for the LR scheduler
+TOTAL_LENGTH="45" # Total window (n_C + n_T)
+WARMUP_RATIO="0.1"
 OUT_ARG="${OUTPUT_DIR}/taylortransformer_bc_results.pkl"
 TAG_PREFIX_ARG="taylor"
 
@@ -35,8 +40,13 @@ RUN_CMD="python scripts/bias_correction_taylortransform.py \
     --models ${MODELS_ARG} \
     --train-ratio ${TRAIN_RATIO_ARG} \
     --val-ratio ${VAL_RATIO_ARG} \
-    --epochs ${EPOCHS_ARG} \
-    --config ${CONFIG_ARG} \
+    --total-length ${TOTAL_LENGTH} \
+    --warmup-ratio ${WARMUP_RATIO} \
+    --accumulation-steps ${ACCUM_STEPS} \
+    --epochs ${EPOCHS} \
+    --min-context ${MIN_CONTEXT} \
+    --max-context ${MAX_CONTEXT} \
+    --batch-size ${BATCH_SIZE} \
     --out ${OUT_ARG} \
     --tag-prefix ${TAG_PREFIX_ARG}"
 

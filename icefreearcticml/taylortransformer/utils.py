@@ -4,8 +4,19 @@ import numpy as np
 
 import torch
 
-from icefreearcticml.icefreearcticml.utils import extend_and_fill_series
+from icefreearcticml.icefreearcticml.utils.utils import extend_and_fill_series
 from icefreearcticml.icefreearcticml.taylortransformer.pipeline import TaylorFormerPipeline
+
+
+MODEL_KWARGS = {
+    'num_heads': 1,
+    'projection_shape_for_head': 8,
+    'output_shape': 1,
+    'rate': 0.1,
+    'num_layers': 4,
+    'enc_dim': 32,
+    'permutation_repeats': 1,
+}
 
 
 def nll(y, μ, log_σ, ϵ=0.001):
@@ -52,6 +63,10 @@ def generate_emulation(model, x_data, y_data, total_years=70, full_window=45, pr
             n_C = full_window - n_T
 
             x_context = x_data[:, years_predicted:full_window+years_predicted]
+            if x_context.shape[1] < full_window:
+                pad_len = full_window - x_context.shape[1]
+                pad = x_data[:, -pad_len:]
+                x_context = torch.cat([x_context, pad], dim=1)
             
             μ, log_σ = model(x_context, y_context, n_C, n_T, training=False)
             
@@ -95,9 +110,12 @@ def split_data_random(n, train_ratio=0.8, val_ratio=0.1):
     
     return train_idx, val_idx, test_idx
 
-def prepare_data(model_data, variables, model_name, train_ratio, val_ratio, obs_start=1979, obs_end=2023):
+def prepare_data(model_data, variables, model_name, train_ratio, val_ratio, indices: list = [], obs_start=1979, obs_end=2023):
     n = len(model_data[variables[0]][model_name].columns)
-    train_idx, val_idx, test_idx = split_data_random(n, train_ratio, val_ratio)
+    if indices:
+        train_idx, val_idx, test_idx = indices
+    else:
+        train_idx, val_idx, test_idx = split_data_random(n, train_ratio, val_ratio)
 
     x_train, x_val, x_test = [], [], []
     y_train, y_val, y_test = [], [], []
@@ -127,6 +145,9 @@ def prepare_data(model_data, variables, model_name, train_ratio, val_ratio, obs_
         "y_val": torch.tensor(np.concatenate(y_val, axis=2), dtype=torch.float32),
         "x_test": torch.tensor(np.concatenate(x_test, axis=2), dtype=torch.float32),
         "y_test": torch.tensor(np.concatenate(y_test, axis=2), dtype=torch.float32),
+        "train_idx": train_idx,
+        "val_idx": val_idx,
+        "test_idx": test_idx,
     }
 
 def setup_model_and_optimiser(
@@ -156,29 +177,29 @@ def setup_model_and_optimiser(
     
     return model, optimiser, scheduler, warmup_scheduler
 
-def train_epoch(model, optimiser, x_train, y_train, config):
+def train_epoch(model, optimiser, x_train, y_train, args):
     n = x_train.shape[0]
 
-    n_C = np.random.randint(config['min_context'], min(n - 10, config['max_context']) + 1)
-    n_T = min(n, config['total_length']) - n_C
+    n_C = np.random.randint(args.min_context, min(n - 10, args.max_context) + 1)
+    n_T = min(n, args.total_length) - n_C
     horizon_type = get_horizon_category(n_T)
 
-    idx = np.random.choice(n, min(config['batch_size'], n), replace=False)
+    idx = np.random.choice(n, min(args.batch_size, n), replace=False)
     x_batch, y_batch = x_train[idx], y_train[idx]
 
     optimiser.zero_grad()
     μ_train, _, train_lik, train_mse = train_step(model, optimiser, x_batch, y_batch, n_C, n_T, training=True)
 
-    train_mse_scaled = train_mse / config['accumulation_steps']
+    train_mse_scaled = train_mse / args.accumulation_steps
     train_lik.backward()
 
     return n_C, n_T, horizon_type, train_mse_scaled
 
-def update_optimiser(model, optimiser, scheduler, warmup_scheduler, epoch, config):
-    if (epoch + 1) % config['accumulation_steps'] == 0:
+def update_optimiser(model, optimiser, scheduler, warmup_scheduler, epoch, args):
+    if (epoch + 1) % args.accumulation_steps == 0:
         torch.nn.utils.clip_grad_norm_(model.parameters(), max_norm=1.0)
         optimiser.step()
-        if epoch < (config['epochs'] * config['warmup_ratio']):
+        if epoch < (args.epochs * args.warmup_ratio):
             warmup_scheduler.step()
         else:
             scheduler.step()
@@ -199,7 +220,7 @@ def save_best_model(model_tag, model, best_val_loss, epoch):
     }, f'checkpoints/best_model_{model_tag}.pth')
 
 
-def train_model(data_res, config, epochs=5000, model_tag="", **model_kwargs):
+def train_model(data_res, args, model_tag="", **model_kwargs):
     model, optimiser, scheduler, warmup_scheduler = setup_model_and_optimiser(**model_kwargs)
     
     train_losses = {'short': [], 'medium': [], 'long': [], 'all': []}
@@ -209,15 +230,15 @@ def train_model(data_res, config, epochs=5000, model_tag="", **model_kwargs):
     os.makedirs('checkpoints', exist_ok=True)
     best_val_loss = float('inf')
     
-    for epoch in range(epochs):
+    for epoch in range(args.epochs):
         model.train()
         
         n_C, n_T, horizon_type, train_mse_scaled = train_epoch(
-            model, optimiser, data_res["x_train"], data_res["y_train"], config
+            model, optimiser, data_res["x_train"], data_res["y_train"], args
         )
-        update_optimiser(model, optimiser, scheduler, warmup_scheduler, epoch, config)
+        update_optimiser(model, optimiser, scheduler, warmup_scheduler, epoch, args)
         
-        train_loss = train_mse_scaled.item() * config['accumulation_steps']
+        train_loss = train_mse_scaled.item() * args.accumulation_steps
         train_losses[horizon_type].append(train_loss)
         train_losses['all'].append(train_loss)
 
@@ -242,6 +263,6 @@ def train_model(data_res, config, epochs=5000, model_tag="", **model_kwargs):
         'train_losses': train_losses,
         'val_losses': val_losses,
         'learning_rates': learning_rates,
-        'config': config,
+        'config': vars(args),
     }
 

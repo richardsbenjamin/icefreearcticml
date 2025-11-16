@@ -1,16 +1,17 @@
 from __future__ import annotations
 
-from typing import Any, Callable
+from typing import Any
 
 import numpy as np
-from pandas import DataFrame, DatetimeIndex
+import xarray as xr
+from pandas import DataFrame
 from sklearn.metrics import mean_squared_error, r2_score
 from scipy.stats import pearsonr
 
-from icefreearcticml.utils import filter_by_years, calculate_first_icefree_year
-from icefreearcticml.pipeline_utils import (
-    get_datetime_index,
-    get_train_test_ensembles,
+from icefreearcticml.icefreearcticml.utils.output import Output
+from icefreearcticml.icefreearcticml.utils.trainconfig import TrainConfig
+from icefreearcticml.icefreearcticml.utils.utils import (
+    calculate_first_icefree_year,
 )
 from pytorch_forecasting.models import TemporalFusionTransformer
 from lightning.pytorch import Trainer
@@ -31,7 +32,7 @@ def get_timeseries_dataloader(data: DataFrame, train_config: TrainConfig, train:
 
 def get_timeseries_model(train_dataloader, val_dataloader):
     model = TemporalFusionTransformer.from_dataset(train_dataloader.dataset)
-    trainer = Trainer(max_epochs=15, accelerator="auto", enable_progress_bar=False)
+    trainer = Trainer(max_epochs=20, accelerator="auto", enable_progress_bar=False)
     trainer.fit(model, train_dataloader, val_dataloader)
     return model
 
@@ -57,7 +58,6 @@ def run_model_from_config(train_config: TrainConfig, model_data: dict, data: dic
         model.state_dict(),
     )
 
-
 def calculate_trend_correlation(original_data, emulated_data, time_axis):
     original_trends = []
     emulated_trends = []
@@ -70,7 +70,6 @@ def calculate_trend_correlation(original_data, emulated_data, time_axis):
     emulated_trends = np.array(emulated_trends)
     trend_correlation, p_value = pearsonr(original_trends, emulated_trends)
     return trend_correlation, p_value, original_trends, emulated_trends
-
 
 def get_bias_impact_row(output: Output) -> dict:
     ice_free_years = calculate_first_icefree_year(output.y_pred_simul).dt.year.values
@@ -94,3 +93,4 @@ def get_members_by_percentile(ds: xr.DataSet, var_name: str, p: float, type_: st
     elif type_ == "gte":
         ds_filtered = ds.where(ds[var_name] >= threshold, drop=True)
     return ds_filtered["ensemble"].values
+

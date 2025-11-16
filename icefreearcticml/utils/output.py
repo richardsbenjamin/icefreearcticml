@@ -1,5 +1,25 @@
+from pandas import DataFrame
 
+from icefreearcticml.icefreearcticml.utils.trainconfig import TrainConfig
 
+class ModelData:
+
+    def __init__(self, output_dict: dict, model_data: dict) -> None:
+        self.output_dict = output_dict
+        self.model_data = model_data
+
+    def __getitem__(self, var: str):
+        res = {}
+        for model_name, output in self.output_dict.items():
+            if output.train_config.y_var == var:
+                res[model_name] = output.y_pred_simul
+            else:
+                data = self.model_data[var][model_name]
+                if output.train_config.members_for_model is not None:
+                    data = data[output.train_config.members_for_model]
+                res[model_name] = data
+
+        return res
 
 
 class Output:

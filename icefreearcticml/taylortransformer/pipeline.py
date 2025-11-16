@@ -1,8 +1,8 @@
 import torch
 import torch.nn as nn
 
-from icefreearcticml.icefreearcticml.taylorformer import TaylorFormer
-from icefreearcticml.icefreearcticml.taylorformer import FeatureWrapper, DE
+from icefreearcticml.icefreearcticml.taylortransformer.taylorformer import TaylorFormer
+from icefreearcticml.icefreearcticml.taylortransformer.feature_wrapper import FeatureWrapper, DE
 
 
 class TaylorFormerPipeline(nn.Module):

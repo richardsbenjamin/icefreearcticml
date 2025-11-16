@@ -4,7 +4,7 @@
 HOME_DIR="/home/benjamin"
 MODULE_DIR="${HOME_DIR}/icefreearcticml"
 OUTPUT_DIR="${MODULE_DIR}/outputs"
-OUTPUT_FILE="${OUTPUT_DIR}/baseline_train.out"
+OUTPUT_FILE="${OUTPUT_DIR}/distribution_learning.out"
 
 #############################################################
 cd ${MODULE_DIR}
@@ -18,20 +18,20 @@ if [ -f ${OUTPUT_FILE} ]; then
     rm ${OUTPUT_FILE}
 fi
 
-MODEL_NAME_ARG="all" # "EC-Earth3,CESM2,MPI-ESM1-2-LR,CanESM5,ACCESS-ESM1-5,all"
+VARS_ARG="ssie,tas,wsiv,oht_atl,oht_pac"
+MODEL_NAME_ARG="all"
 TRAIN_SPLIT_ARG="0.8"
 MAX_ENCODER_ARG="10"
-MAX_PRED_ARG="20"
-Y_VAR_ARG="ssie"
-X_VARS_ARG="tas,wsiv,oht_atl,oht_pac"
+MAX_PRED_ARG="76"
+EPOCHS_ARG="15"
 
-RUN_CMD="python scripts/baseline_train.py \
+RUN_CMD="python scripts/learningdistribution.py \
     --model-name ${MODEL_NAME_ARG} \
     --train-split ${TRAIN_SPLIT_ARG} \
     --max-encoder-length ${MAX_ENCODER_ARG} \
     --max-prediction-length ${MAX_PRED_ARG} \
-    --y-var ${Y_VAR_ARG} \
-    --x-vars ${X_VARS_ARG} \
+    --epochs ${EPOCHS_ARG} \
+    --vars ${VARS_ARG} \
     --save-dir ${OUTPUT_DIR}"
 
 # If output file is given, redirect output

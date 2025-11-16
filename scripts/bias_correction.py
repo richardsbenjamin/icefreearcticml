@@ -1,24 +1,22 @@
 from __future__ import annotations
 
 import argparse
-import os
 import joblib
+import os
+import warnings
 from typing import Dict, List
 
-import xarray as xr  # for type hints/optional saves if needed
-
-from cmethods import adjust  # noqa: F401 (kept for completeness if needed downstream)
 from cmethods.core import apply_ufunc as apply_correction
 
-from icefreearcticml.constants import VARIABLES as VAR_NAMES, MODELS
-from icefreearcticml.utils import read_model_data_all
-from icefreearcticml.pipeline_utils import add_all
-from icefreearcticml.bias_correction_utils import (
+from icefreearcticml.icefreearcticml.constants import VARIABLES as VAR_NAMES
+from icefreearcticml.icefreearcticml.utils.data import read_model_data_all
+from icefreearcticml.icefreearcticml.bias_correction import (
     DEFAULT_BIAS_METHODS,
-    DEFAULT_MODEL_NAMES,
     compute_bias_corrections,
     score_bias_corrections,
 )
+
+warnings.filterwarnings("ignore", category=UserWarning)
 
 
 def parse_args() -> argparse.Namespace:
@@ -28,14 +26,12 @@ def parse_args() -> argparse.Namespace:
     p.add_argument("--save-dir", default="outputs", help="Directory to save outputs")
     return p.parse_args()
 
-
 def select_methods(methods_csv: str) -> Dict[str, dict]:
     names = [m for m in methods_csv.split(",") if m]
     selected = {k: v for k, v in DEFAULT_BIAS_METHODS.items() if k in names}
     if not selected:
         raise ValueError("No valid methods selected. Check --methods against available methods.")
     return selected
-
 
 def main() -> None:
     args = parse_args()
@@ -44,9 +40,7 @@ def main() -> None:
     variables: List[str] = [v for v in args.vars.split(",") if v]
     methods: Dict[str, dict] = select_methods(args.methods)
 
-    # Load and prepare model data
     model_data: Dict = read_model_data_all()
-    add_all(model_data)
 
     # Compute corrections
     bias_corrections = compute_bias_corrections(

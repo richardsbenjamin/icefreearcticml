@@ -17,6 +17,8 @@ MODELS = [
     "ACCESS-ESM1-5",
     "Observations",
 ]
+MODEL_NAMES = MODELS[:-1] # Remove observations
+MODEL_PATH = "./data"
 MULTI_LIANG_RES_NAMES = [
     "T",
     "tau",
@@ -57,19 +59,19 @@ VAR_LEGEND_ARGS = {
     "lwfd": dict(loc='upper left',fontsize=23,shadow=True,frameon=False,ncol=2),
 }
 VAR_YLABELS = {
-    "ssie": 'September sea-ice extent (10$^6$ km$^2$)',
-    "wsie": 'March sea-ice extent (10$^6$ km$^2$)', 
-    "wsiv": 'March sea-ice volume (10$^3$ km$^3$)',
-    "tas": 'Annual mean air temperature ($^\circ$C)',
-    "oht_atl": 'Annual mean Atlantic OHT (TW)',
-    "oht_pac": 'Annual mean Pacific OHT (TW)',
+    "ssie": 'SSIE (10$^6$ km$^2$)',
+    "wsie": ' (10$^6$ km$^2$)', 
+    "wsiv": 'WSIV (10$^3$ km$^3$)',
+    "tas": 'TAS ($^\circ$C)',
+    "oht_atl": 'OHT_ATL (TW)',
+    "oht_pac": 'OHT_PAC (TW)',
     "swfd": 'Annual mean net SWR (W m$^{-2}$)',
     "lwfd": 'Annual mean downward LWR (W m$^{-2}$)',
 }
 VAR_YLABELS_SHORT = {
     "ssie": "SSIE",
     "wsie": "WSIE",
-    "tas": "$T_{2m}$",
+    "tas": "TAS",
     "wsiv": "WSIV",
     "oht_atl": "$OHT_{ATL}$",
     "oht_pac": "$OHT_{PAC}$",

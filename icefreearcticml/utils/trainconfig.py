@@ -1,5 +1,10 @@
-from pandas import DataFrame
-from icefreearcticml.utils import get_datetime_index
+from pandas import DataFrame, DatetimeIndex
+from icefreearcticml.icefreearcticml.utils.utils import (
+    get_datetime_index,
+    get_melt,
+    get_train_test_ensembles,
+    filter_by_years,
+)
 
 class TrainConfig:
 
@@ -16,6 +21,7 @@ class TrainConfig:
         self.train_split = train_split
         self.model_name = model_name
         self.members_for_model = None
+        self.train_test_set = False
         self._set_all_vars()
         for k, v in kwargs.items():
             setattr(self, k, v)
@@ -85,9 +91,15 @@ class TrainConfig:
     def set_train_test_members(self) -> None:
         self.n_time_steps = len(self.all_data["time"].unique())
         self.n_members = len(self.all_data["member"].unique())
-        train_members, test_members = get_train_test_ensembles(self.n_members, self.train_split)
+        if self.train_test_set:
+            train_members, test_members = self.train_members, self.test_members
+        else:
+            train_members, test_members = get_train_test_ensembles(self.n_members, self.train_split)
         self.test_members = self.all_data["member"].unique()[test_members]
         self.train_members = self.all_data["member"].unique()[train_members]
+
+    def set_prior_train_test_members(self, train_members: list, test_members: list) -> None:
+        self.train_members, self.test_members = train_members, test_members
 
     @property
     def train_data(self) -> DataFrame:

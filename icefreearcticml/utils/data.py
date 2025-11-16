@@ -3,10 +3,11 @@ import numpy as np
 from pandas import DataFrame, Series, concat
 from typing import Dict
 
-from icefreearcticml.utils import calculate_ensemble_mean, get_year_list
-from icefreearcticml.constants import (
+from icefreearcticml.icefreearcticml.utils.utils import calculate_ensemble_mean, get_year_list
+from icefreearcticml.icefreearcticml.constants import (
     MODELS,
     MODEL_NAMES,
+    MODEL_PATH,
     MODEL_START_YEAR,
     MODEL_END_YEAR,
     VARIABLES,
@@ -24,30 +25,12 @@ def add_all(model_data: Dict) -> None:
         all_.columns = col_names
         model_data[var]["all"] = all_
 
-def read_model_data(model: str) -> tuple[np.ndarray]:
-    ssie, wsie, wsiv, tas, oht_atl, oht_pac, swfd, lwfd = np.load(f'./data/Timeseries_{model}.npy', allow_pickle=True)
-    return ssie, wsie, wsiv, tas, oht_atl, oht_pac, swfd, lwfd
+def read_model_data(model_path: str, model: str) -> tuple[np.ndarray]:
+    return np.load(f'{model_path}/Timeseries_{model}.npy', allow_pickle=True)
 
-def read_model_data_all() -> dict:
-    """_summary_
-
-    Returns
-    -------
-    dict
-        _description_
-
-    Notes
-    -----
-    It's easier to read the data in with the model names as outer keys
-    and the variable names as inner keys, so we do that first, then loop
-    over that dictionary to produce the output dictionary; while doing
-    this loop we also construct the observational data as Series objects
-    indexed by the years, and the model ensemble data as DataFrame objects
-    indexed by the years.
-
-    """
+def read_model_data_all(model_path: str = MODEL_PATH) -> dict:
     model_data_in = {
-        model: dict(zip(VARIABLES, read_model_data(model))) for model in MODELS
+        model: dict(zip(VARIABLES, read_model_data(model_path, model))) for model in MODELS
     }
     model_data = {}
     for var in VARIABLES:

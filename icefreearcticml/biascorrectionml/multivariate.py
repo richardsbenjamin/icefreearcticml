@@ -7,15 +7,8 @@ from sklearn.linear_model import LinearRegression
 from sklearn.neural_network import MLPRegressor
 from sklearn.multioutput import MultiOutputRegressor, RegressorChain
 
-from .utils import prepare_data
+from icefreearcticml.icefreearcticml.biascorrectionml.utils import prepare_data
 
-
-METHOD_MAP = {
-    "randomforest": train_multivariate_randomforest,
-    "linear": train_multivariate_linear,
-    "neuralnet": train_multivariate_neuralnet,
-    "chained_rf": train_chained_randomforest,
-}
 
 def train_multivariate_randomforest(X_train, y_train, **params):
     model = MultiOutputRegressor(RandomForestRegressor(**params))
@@ -64,3 +57,9 @@ def run_multivariate_bias_correction(
         "data_res": data_res,
     }
 
+METHOD_MAP = {
+    "random_forest": train_multivariate_randomforest,
+    "linear": train_multivariate_linear,
+    "neural_network": train_multivariate_neuralnet,
+    "chained_rf": train_chained_randomforest,
+}

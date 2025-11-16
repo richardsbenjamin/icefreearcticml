@@ -11,12 +11,11 @@ from icefreearcticml.icefreearcticml.constants import (
     MODELS,
     VARIABLES as VAR_NAMES,
 )
-from icefreearcticml.icefreearcticml.utils import (
+from icefreearcticml.icefreearcticml.utils.utils import (
     calculate_bias,
     calculate_first_icefree_year,
-    read_model_data_all,
 )
-from icefreearcticml.icefreearcticml.pipeline_helpers import add_all
+from icefreearcticml.icefreearcticml.utils.data import read_model_data_all
 
 
 MODEL_NAMES: List[str] = MODELS[:-1]  # exclude 'Observations'
@@ -106,7 +105,6 @@ def main() -> None:
 
     # load and prepare data
     model_data = read_model_data_all()
-    add_all(model_data)
 
     # compute outputs
     ice_free_year_ds = compute_ice_free_year_ds(model_data)

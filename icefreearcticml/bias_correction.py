@@ -21,7 +21,7 @@ DEFAULT_BIAS_METHODS: Dict[str, dict] = {
     "quantile_mapping": {"n_quantiles": 250, "kind": "+"},
 }
 
-DEFAULT_BIAS_VARS: List[str] = ["wsiv", "tas", "oht_atl", "oht_pac"]
+DEFAULT_BIAS_VARS: List[str] = ["ssie", "wsiv", "tas", "oht_atl", "oht_pac"]
 # Exclude 'Observations'
 DEFAULT_MODEL_NAMES: List[str] = _MODELS[:-1]
 
@@ -58,7 +58,6 @@ def get_bias_corrected_members(
     result.index = model_df.index
     result.columns = model_df.columns
     return result
-
 
 def compute_bias_corrections(
     model_data: dict,
@@ -146,7 +145,6 @@ def score_bias_corrections(
 
     mse_df = DataFrame(res, index=bias_vars, columns=methods)
     return bias_correction_scores, mse_df
-
 
 def plot_bias_correction_example(
     model_data: dict,

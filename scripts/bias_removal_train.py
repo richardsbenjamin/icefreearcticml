@@ -11,9 +11,9 @@ import xarray as xr
 from sklearn.cluster import KMeans
 from sklearn.metrics import silhouette_score
 
-from icefreearcticml.tft_utils import TrainConfig, run_model_from_config, get_members_by_percentile
-from icefreearcticml.utils import read_model_data_all
-from icefreearcticml.pipeline_utils import add_all
+from icefreearcticml.icefreearcticml.utils.trainconfig import TrainConfig
+from icefreearcticml.icefreearcticml.tft import run_model_from_config, get_members_by_percentile
+from icefreearcticml.icefreearcticml.utils.data import read_model_data_all
 
 
 METHOD_CHOICES = [
@@ -146,7 +146,7 @@ def main() -> None:
 
     # load data
     model_data = read_model_data_all()
-    add_all(model_data)
+    print(args.bias_ds)
     bias_ds = load_bias_ds(args.bias_ds)
 
     base_config = build_train_config(args)

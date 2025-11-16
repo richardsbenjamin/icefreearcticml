@@ -19,29 +19,29 @@ if [ -f ${OUTPUT_FILE} ]; then
 fi
 
 # Optional environment overrides
-METHOD_ARG=${METHOD:-"abs_large_remove"}
-BIAS_DS_ARG=${BIAS_DS:-"${OUTPUT_DIR}/bias_ds.nc"}
-BIAS_VARS_ARG=${BIAS_VARS:-"tas,wsiv,oht_atl,oht_pac"}
-PERCENTILES_ARG=${PERCENTILES:-"0.01,0.02,0.05"}
+METHOD_ARG="warm_cold_large_remove"
+BIAS_DS_ARG="${OUTPUT_DIR}/bias_ds.nc"
+BIAS_VARS_ARG="tas" # wsiv,oht_atl,oht_pac
+PERCENTILES_ARG="0.05,0.1,0.2"
 
-MODEL_NAME_ARG=${MODEL_NAME:-"all"}
-TRAIN_SPLIT_ARG=${TRAIN_SPLIT:-"0.8"}
-MAX_ENCODER_ARG=${MAX_ENCODER_LENGTH:-"10"}
-MAX_PRED_ARG=${MAX_PREDICTION_LENGTH:-"1"}
-Y_VAR_ARG=${Y_VAR:-"ssie"}
-X_VARS_ARG=${X_VARS:-"tas,wsiv,oht_atl,oht_pac"}
+MODEL_NAME_ARG="all"
+TRAIN_SPLIT_ARG="0.8"
+MAX_ENCODER_ARG="10"
+MAX_PRED_ARG="1"
+Y_VAR_ARG="ssie"
+X_VARS_ARG="tas" # tas,wsiv,oht_atl,oht_pac
 
 RUN_CMD="python scripts/bias_removal_train.py \
-    --method \"${METHOD_ARG}\" \
-    --bias-ds \"${BIAS_DS_ARG}\" \
-    --bias-vars \"${BIAS_VARS_ARG}\" \
-    --percentiles \"${PERCENTILES_ARG}\" \
-    --model-name \"${MODEL_NAME_ARG}\" \
+    --method ${METHOD_ARG} \
+    --bias-ds ${BIAS_DS_ARG} \
+    --bias-vars ${BIAS_VARS_ARG} \
+    --percentiles ${PERCENTILES_ARG} \
+    --model-name ${MODEL_NAME_ARG} \
     --train-split ${TRAIN_SPLIT_ARG} \
     --max-encoder-length ${MAX_ENCODER_ARG} \
     --max-prediction-length ${MAX_PRED_ARG} \
-    --y-var \"${Y_VAR_ARG}\" \
-    --x-vars \"${X_VARS_ARG}\" \
+    --y-var ${Y_VAR_ARG} \
+    --x-vars ${X_VARS_ARG} \
     --save-dir ${OUTPUT_DIR}"
 
 # If output file is given, redirect output

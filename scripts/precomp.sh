@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Local paths
-HOME_DIR="/content"
+HOME_DIR="/home/benjamin"
 MODULE_DIR="${HOME_DIR}/icefreearcticml"
 OUTPUT_DIR="${MODULE_DIR}/outputs"
 
@@ -25,7 +25,7 @@ if [ -f ${OUTPUT_FILE} ]; then
 fi
 
 # Optional environment overrides
-VARS_ARG="tas,wsiv,oht_atl,oht_pac"
+VARS_ARG="ssie,tas,wsiv,oht_atl,oht_pac"
 BIAS_START_ARG="1980-01-01"
 BIAS_END_ARG="2014-01-01"
 

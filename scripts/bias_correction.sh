@@ -19,12 +19,12 @@ if [ -f ${OUTPUT_FILE} ]; then
 fi
 
 # Optional environment overrides
-VARS_ARG=${VARS:-"tas,wsiv,oht_atl,oht_pac"}
-METHODS_ARG=${METHODS:-"linear_scaling,variance_scaling,quantile_mapping"}
+VARS_ARG="ssie,tas,wsiv,oht_atl,oht_pac"
+METHODS_ARG="linear_scaling,variance_scaling,quantile_mapping"
 
 RUN_CMD="python scripts/bias_correction.py \
-    --vars \"${VARS_ARG}\" \
-    --methods \"${METHODS_ARG}\" \
+    --vars ${VARS_ARG} \
+    --methods ${METHODS_ARG} \
     --save-dir ${OUTPUT_DIR}"
 
 # If output file is given, redirect output

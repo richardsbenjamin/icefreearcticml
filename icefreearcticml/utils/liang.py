@@ -1,15 +1,21 @@
 from __future__ import annotations
 
+from typing import Any, Callable
+
+import matplotlib.pyplot as plt
 import numpy as np
 from pandas import DataFrame
 from scipy.stats import combine_pvalues
 
-from icefreearcticml.constants import (
+from icefreearcticml.icefreearcticml.constants import (
+    MODEL_COLOURS,
+    MODEL_NAMES,
     MULTI_LIANG_RES_NAMES,
+    VAR_YLABELS_SHORT,
 )
-from icefreearcticml.liangindex import compute_liang_nvar
-from icefreearcticml.utils import filter_by_years, subtract_ensemble_mean
-
+from icefreearcticml.icefreearcticml.liangindex import compute_liang_nvar
+from icefreearcticml.icefreearcticml.utils.output import ModelData, Output
+from icefreearcticml.icefreearcticml.utils.utils import filter_by_years, subtract_ensemble_mean
 
 
 def calculate_all_liang_flows(model_data: dict, liang_config: LiangConfig, model_names: list = MODEL_NAMES) -> dict:
@@ -75,12 +81,17 @@ def compute_liang_nvar_wrapper(x, dt, n_iter):
     res["error_R"] = np.nanstd(res["error_R"],axis=0)
     return res
 
-def get_liangs_from_output_dict(output_dict: dict[Output], liang_config: LiangConfig, model_names: list) -> dict:
+def get_liangs_from_output_dict(
+        model_data_name: str,
+        output_dict: dict[Output],
+        liang_config: LiangConfig,
+        model_names: list,
+        model_data: dict,
+    ) -> dict:
     liangs = {}
     for key, outputs in output_dict.items():
-        emulated_model_data = ModelData({"all": outputs})
-        liang_res_emulated = calculate_all_liang_flows(emulated_model_data, liang_config, model_names=model_names)
-        liangs[key] = liang_res_emulated
+        emulated_model_data = ModelData({model_data_name: outputs}, model_data)
+        liangs[key] = calculate_all_liang_flows(emulated_model_data, liang_config, model_names=model_names)
     return liangs
 
 def plot_liangs_dict(
@@ -103,7 +114,14 @@ def plot_liangs_dict(
         )
     return fig
 
-def plot_liang_tau_avgs(ax: Any, liang_res, var_liangs, model_names: list = MODEL_NAMES):
+def plot_liang_tau_avgs(
+        ax: plt.Axes,
+        liang_res: dict,
+        var_liangs: list,
+        model_names: list = MODEL_NAMES,
+        model_colours: list = MODEL_COLOURS,
+        replace_edge_col: str = "red",
+    ) -> None:
     ax.grid(linestyle='--')
     jitter = 0.1
     for j, var in enumerate(var_liangs):
@@ -111,13 +129,16 @@ def plot_liang_tau_avgs(ax: Any, liang_res, var_liangs, model_names: list = MODE
             tau = liang_res["tau_avgs"][model][var]
             pvalue = liang_res["combined_pvalues"][model][var]
             x = j - 0.2 + i * jitter
-            kwargs = {"edgecolors": 'black', "linewidths": 2} if pvalue <= 0.05 else {}
-            ax.scatter(x, tau, label=model, c=MODEL_COLOURS[model], s=100, **kwargs)
+            colour = model_colours.get(model, "black")
+            kwargs = {"edgecolors": replace_edge_col if colour in ("black") else "black", "linewidths": 2} if pvalue <= 0.05 else {}
+            label = model if j == 0 else None
+            ax.scatter(x, tau, label=label, c=colour, s=100, **kwargs)
     ax.set_xticks(range(len(var_liangs)))
     ax.set_xticklabels([VAR_YLABELS_SHORT[var] for var in var_liangs])
     ax.set_ylabel("Information Transfer")
     ax.axhline(0, color='black', linestyle='--')
-    ax.set_ylim(-1, 30)
+    all_taus = list(liang_res["tau_avgs"].values())[0].values()
+    ax.set_ylim(-1, max(all_taus) * 1.1)
     ax.grid(linestyle='--')
     ax.set_axisbelow(True)
 
